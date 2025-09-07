@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .info-box {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            min-width: 100px;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            height: 100px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+
+        .card.flip {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            font-size: 2rem;
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #3b5bdb, #7950f2);
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #5a7df9, #9668e0);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .victory-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .victory-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .victory-content h2 {
+            color: #6e8efb;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .victory-content p {
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 500px) {
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .card {
+                height: 80px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-brain"></i> Memory Game</h1>
+        
+        <div class="game-info">
+            <div class="info-box">
+                <div class="info-label">Moves</div>
+                <div class="info-value" id="moves">0</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Time</div>
+                <div class="info-value" id="time">0s</div>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Pairs</div>
+                <div class="info-value" id="pairs">0/8</div>
+            </div>
+        </div>
+        
+        <div class="game-board" id="game-board">
+            <!-- Cards will be generated by JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <button id="reset-btn"><i class="fas fa-redo"></i> Reset Game</button>
+            <button id="new-game-btn"><i class="fas fa-plus-circle"></i> New Game</button>
+        </div>
+    </div>
+    
+    <div class="victory-message" id="victory-message">
+        <div class="victory-content">
+            <h2>Congratulations! <i class="fas fa-trophy"></i></h2>
+            <p>You found all pairs in <span id="final-moves"></span> moves and <span id="final-time"></span> seconds!</p>
+            <button id="play-again-btn"><i class="fas fa-play"></i> Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameBoard = document.getElementById('game-board');
+            const movesElement = document.getElementById('moves');
+            const timeElement = document.getElementById('time');
+            const pairsElement = document.getElementById('pairs');
+            const resetBtn = document.getElementById('reset-btn');
+            const newGameBtn = document.getElementById('new-game-btn');
+            const victoryMessage = document.getElementById('victory-message');
+            const finalMoves = document.getElementById('final-moves');
+            const finalTime = document.getElementById('final-time');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            
+            let cards = [];
+            let moves = 0;
+            let time = 0;
+            let pairsFound = 0;
+            let timer;
+            let firstCard = null;
+            let secondCard = null;
+            let lockBoard = false;
+            
+            // Card icons (Font Awesome classes)
+            const cardIcons = [
+                'fas fa-heart', 'fas fa-star', 'fas fa-moon', 'fas fa-sun',
+                'fas fa-bolt', 'fas fa-cloud', 'fas fa-flag', 'fas fa-key'
+            ];
+            
+            // Initialize game
+            function initGame() {
+                clearInterval(timer);
+                moves = 0;
+                time = 0;
+                pairsFound = 0;
+                movesElement.textContent = moves;
+                timeElement.textContent = `${time}s`;
+                pairsElement.textContent = `${pairsFound}/8`;
+                gameBoard.innerHTML = '';
+                
+                // Duplicate and shuffle icons
+                const gameIcons = [...cardIcons, ...cardIcons];
+                gameIcons.sort(() => Math.random() - 0.5);
+                
+                // Create cards
+                gameIcons.forEach((icon, index) => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.dataset.icon = icon;
+                    
+                    const cardFront = document.createElement('div');
+                    cardFront.classList.add('card-front');
+                    const iconElement = document.createElement('i');
+                    iconElement.className = icon;
+                    cardFront.appendChild(iconElement);
+                    
+                    const cardBack = document.createElement('div');
+                    cardBack.classList.add('card-back');
+                    const questionMark = document.createElement('i');
+                    questionMark.className = 'fas fa-question';
+                    cardBack.appendChild(questionMark);
+                    
+                    card.appendChild(cardFront);
+                    card.appendChild(cardBack);
+                    
+                    card.addEventListener('click', flipCard);
+                    gameBoard.appendChild(card);
+                });
+                
+                cards = document.querySelectorAll('.card');
+                
+                // Start timer
+                timer = setInterval(() => {
+                    time++;
+                    timeElement.textContent = `${time}s`;
+                }, 1000);
+            }
+            
+            // Flip card function
+            function flipCard() {
+                if (lockBoard) return;
+                if (this === firstCard) return;
+                
+                this.classList.add('flip');
+                
+                if (!firstCard) {
+                    // First card flipped
+                    firstCard = this;
+                    return;
+                }
+                
+                // Second card flipped
+                secondCard = this;
+                moves++;
+                movesElement.textContent = moves;
+                
+                checkForMatch();
+            }
+            
+            // Check if cards match
+            function checkForMatch() {
+                let isMatch = firstCard.dataset.icon === secondCard.dataset.icon;
+                
+                if (isMatch) {
+                    disableCards();
+                    pairsFound++;
+                    pairsElement.textContent = `${pairsFound}/8`;
+                    
+                    if (pairsFound === 8) {
+                        clearInterval(timer);
+                        setTimeout(() => {
+                            finalMoves.textContent = moves;
+                            finalTime.textContent = time;
+                            victoryMessage.style.display = 'flex';
+                        }, 1000);
+                    }
+                } else {
+                    unflipCards();
+                }
+            }
+            
+            // Disable matched cards
+            function disableCards() {
+                firstCard.removeEventListener('click', flipCard);
+                secondCard.removeEventListener('click', flipCard);
+                
+                resetBoard();
+            }
+            
+            // Unflip non-matching cards
+            function unflipCards() {
+                lockBoard = true;
+                
+                setTimeout(() => {
+                    firstCard.classList.remove('flip');
+                    secondCard.classList.remove('flip');
+                    
+                    resetBoard();
+                }, 1000);
+            }
+            
+            // Reset board after each turn
+            function resetBoard() {
+                [firstCard, secondCard, lockBoard] = [null, null, false];
+            }
+            
+            // Event listeners
+            resetBtn.addEventListener('click', () => {
+                clearInterval(timer);
+                initGame();
+            });
+            
+            newGameBtn.addEventListener('click', () => {
+                // Create a new set of icons for a new game
+                initGame();
+            });
+            
+            playAgainBtn.addEventListener('click', () => {
+                victoryMessage.style.display = 'none';
+                initGame();
+            });
+            
+            // Start the game
+            initGame();
+        });
+    </script>
+</body>
+</html>
